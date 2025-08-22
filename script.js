@@ -1,5 +1,5 @@
-// GASのWebアプリのURLをここに設定
-const GAS_URL = "ここにステップ2で取得するGASのURLを貼り付け";
+// ここに実際のGAS URLを貼り付け
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx5sBThbpLgrWBE9dqHy-AxVgakb9gvIpg5Wn98zLUbp9c80qlzW6mi83LDxkkAcfPy/exec";
 
 const form = document.getElementById("survey-form");
 const messageDiv = document.getElementById("message");
