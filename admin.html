@@ -1,694 +1,726 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アンケートデータ ダッシュボード</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理者ダッシュボード - アンケートシステム</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap");
-        
-        :root {
-            --royal-blue: #0a2472;
-            --gold: #d4af37;
-            --light-gold: #f3ead3;
-            --white: #ffffff;
-            --dark-text: #333333;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap");
+
+      :root {
+        --royal-blue: #0a2472;
+        --gold: #d4af37;
+        --light-gold: #f3ead3;
+        --white: #ffffff;
+        --dark-text: #333333;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --info: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Noto Sans JP", sans-serif;
+        background-color: var(--light-gold);
+        color: var(--dark-text);
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(135deg, var(--royal-blue), #1e44a0);
+        color: var(--gold);
+        padding: 2em 1em;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      header h1 {
+        font-size: 2em;
+        margin-bottom: 0.5em;
+        font-weight: 700;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2em 1em;
+      }
+
+      .control-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1em;
+        margin-bottom: 2em;
+      }
+
+      .btn {
+        padding: 1em 1.5em;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .btn-primary {
+        background: var(--royal-blue);
+        color: var(--gold);
+      }
+
+      .btn-success {
+        background: var(--success);
+        color: white;
+      }
+
+      .btn-warning {
+        background: var(--warning);
+        color: var(--dark-text);
+      }
+
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+      }
+
+      .btn-info {
+        background: var(--info);
+        color: white;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .status-panel {
+        background: var(--white);
+        padding: 1.5em;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2em;
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1em;
+      }
+
+      .status-item {
+        text-align: center;
+        padding: 1em;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .status-number {
+        font-size: 2em;
+        font-weight: 700;
+        color: var(--royal-blue);
+      }
+
+      .status-label {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 0.5em;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2em;
+        color: #666;
+      }
+
+      .loading::after {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--royal-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1em;
+        border-radius: 8px;
+        margin: 1em 0;
+        border-left: 4px solid var(--danger);
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        padding: 1em;
+        border-radius: 8px;
+        margin: 1em 0;
+        border-left: 4px solid var(--success);
+      }
+
+      .gas-config {
+        background: var(--white);
+        padding: 1.5em;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2em;
+      }
+
+      .gas-config h3 {
+        color: var(--royal-blue);
+        margin-bottom: 1em;
+      }
+
+      input[type="url"] {
+        width: 100%;
+        padding: 0.8em;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        margin-bottom: 1em;
+      }
+
+      input[type="url"]:focus {
+        outline: none;
+        border-color: var(--royal-blue);
+      }
+
+      .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2em;
+      }
+
+      .chart-card {
+        background: var(--white);
+        padding: 1.5em;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .chart-title {
+        font-size: 1.2em;
+        font-weight: 600;
+        margin-bottom: 1em;
+        color: var(--royal-blue);
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        .control-panel {
+          grid-template-columns: 1fr;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .charts-container {
+          grid-template-columns: 1fr;
         }
-
-        body {
-            font-family: "Noto Sans JP", sans-serif;
-            background-color: var(--light-gold);
-            color: var(--dark-text);
-            line-height: 1.6;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--royal-blue), #1e44a0);
-            color: var(--gold);
-            padding: 2em 1em;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        header h1 {
-            font-size: 2em;
-            margin-bottom: 0.5em;
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2em 1em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5em;
-            margin-bottom: 2em;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 1.5em;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 5px solid var(--royal-blue);
-        }
-
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: var(--royal-blue);
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 0.5em;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2em;
-            margin-bottom: 2em;
-        }
-
-        .chart-container {
-            background: var(--white);
-            padding: 1.5em;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .chart-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            margin-bottom: 1em;
-            color: var(--royal-blue);
-            text-align: center;
-        }
-
-        .data-input {
-            background: var(--white);
-            padding: 1.5em;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 2em;
-        }
-
-        .data-input h3 {
-            color: var(--royal-blue);
-            margin-bottom: 1em;
-        }
-
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 1em;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.9em;
-            resize: vertical;
-        }
-
-        .btn {
-            background: var(--royal-blue);
-            color: var(--gold);
-            padding: 0.8em 2em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin: 0.5em 0.5em 0.5em 0;
-        }
-
-        .btn:hover {
-            background: #1e44a0;
-            transform: translateY(-2px);
-        }
-
-        .btn-sample {
-            background: var(--warning);
-            color: var(--dark-text);
-        }
-
-        .btn-sample:hover {
-            background: #e0a800;
-        }
-
-        .summary-section {
-            background: var(--white);
-            padding: 1.5em;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 2em;
-        }
-
-        .summary-section h3 {
-            color: var(--royal-blue);
-            margin-bottom: 1em;
-            font-size: 1.3em;
-        }
-
-        .category-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1em;
-            margin-bottom: 1.5em;
-        }
-
-        .category-card {
-            background: #f8f9fa;
-            padding: 1em;
-            border-radius: 8px;
-            border-left: 4px solid var(--gold);
-        }
-
-        .category-card h4 {
-            color: var(--royal-blue);
-            margin-bottom: 0.5em;
-        }
-
-        .progress-bar {
-            background: #e9ecef;
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 0.5em 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
-            transition: width 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .chart-container canvas {
-                max-height: 300px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>📊 アンケートデータ ダッシュボード</h1>
-        <p>女性の健康に関するアンケート結果の可視化</p>
+      <h1>🛡️ 管理者ダッシュボード</h1>
+      <p>アンケートシステム管理・データ分析</p>
     </header>
 
     <div class="container">
-        <!-- データ入力エリア -->
-        <div class="data-input">
-            <h3>🔢 データ入力</h3>
-            <p>GoogleスプレッドシートからCSV形式でデータをコピーして貼り付けてください。</p>
-            <textarea id="dataInput" placeholder="タイムスタンプ,体が冷えやすく夕方になると足がパンパンにむくんで靴がきつい,便秘がちでお腹が張ってポッコリしているのが気になる,十分寝たつもりでも日中ずっと眠くて体が重い,常に肩や首が凝っていて頭痛に悩まされることもある,手足がいつも冷たく冬はもちろん夏場のクーラーも辛い,理由もないのに急に不安になったり気分が落ち込んだりする,些細なことでイライラしてしまい家族やパートナーにきつく当たって後で自己嫌悪に陥る,生理前になるとイライラ気分の落ち込み胸の張り肌荒れ眠気などがひどくて辛い,生理周期によって仕事のパフォーマンスや人間関係に影響が出てしまう,会議中や作業中に頭がぼーっとしてしまい話が頭に入ってこない&#10;2024-01-15 10:30:00,当てはまる,どちらともいえない,当てはまる,当てはまる,どちらともいえない,あてはまらない,当てはまる,当てはまる,どちらともいえない,当てはまる"></textarea>
-            <div>
-                <button class="btn" onclick="analyzeData()">📈 データを分析</button>
-                <button class="btn btn-sample" onclick="loadSampleData()">📋 サンプルデータを読み込み</button>
-                <button class="btn" onclick="clearData()">🗑️ クリア</button>
-            </div>
-        </div>
+      <!-- GAS URL設定 -->
+      <div class="gas-config">
+        <h3>⚙️ Google Apps Script 設定</h3>
+        <input
+          type="url"
+          id="gasUrl"
+          placeholder="GAS WebアプリのURLを入力してください"
+          value="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
+        />
+        <button class="btn btn-primary" onclick="saveGasUrl()">
+          URL を保存
+        </button>
+      </div>
 
-        <!-- 統計サマリー -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number" id="totalResponses">0</span>
-                <div class="stat-label">総回答数</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="avgConcernLevel">0%</span>
-                <div class="stat-label">平均悩み度</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="highConcernCount">0</span>
-                <div class="stat-label">高悩み度の人数</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="mostCommonIssue">-</span>
-                <div class="stat-label">最も多い悩み</div>
-            </div>
-        </div>
+      <!-- コントロールパネル -->
+      <div class="control-panel">
+        <button class="btn btn-success" onclick="loadData()">
+          📊 データを読み込み
+        </button>
+        <button class="btn btn-info" onclick="refreshStats()">
+          🔄 統計を更新
+        </button>
+        <button class="btn btn-warning" onclick="exportData()">
+          📥 CSVエクスポート
+        </button>
+        <button class="btn btn-primary" onclick="openSurvey()">
+          📝 アンケート画面
+        </button>
+      </div>
 
-        <!-- カテゴリ別サマリー -->
-        <div class="summary-section">
-            <h3>📋 カテゴリ別サマリー</h3>
-            <div class="category-summary" id="categorySummary">
-                <!-- JavaScriptで動的生成 -->
-            </div>
+      <!-- ステータスパネル -->
+      <div class="status-panel">
+        <h3>📈 リアルタイム統計</h3>
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="status-number" id="totalCount">-</div>
+            <div class="status-label">総回答数</div>
+          </div>
+          <div class="status-item">
+            <div class="status-number" id="avgScore">-</div>
+            <div class="status-label">平均悩み度</div>
+          </div>
+          <div class="status-item">
+            <div class="status-number" id="todayCount">-</div>
+            <div class="status-label">今日の回答</div>
+          </div>
+          <div class="status-item">
+            <div class="status-number" id="highConcern">-</div>
+            <div class="status-label">高悩み度</div>
+          </div>
         </div>
+      </div>
 
-        <!-- チャート表示エリア -->
-        <div class="charts-grid">
-            <div class="chart-container">
-                <div class="chart-title">質問別回答分布</div>
-                <canvas id="questionChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <div class="chart-title">カテゴリ別悩み度</div>
-                <canvas id="categoryChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <div class="chart-title">回答傾向（円グラフ）</div>
-                <canvas id="responseChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <div class="chart-title">時系列推移</div>
-                <canvas id="timeChart"></canvas>
-            </div>
+      <!-- メッセージエリア -->
+      <div id="messageArea"></div>
+
+      <!-- チャート表示エリア -->
+      <div class="charts-container">
+        <div class="chart-card">
+          <div class="chart-title">カテゴリ別悩み度</div>
+          <canvas id="categoryChart"></canvas>
         </div>
+        <div class="chart-card">
+          <div class="chart-title">日別回答数推移</div>
+          <canvas id="timeChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">質問別回答分布（上位5件）</div>
+          <canvas id="topQuestionsChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">回答傾向</div>
+          <canvas id="responseChart"></canvas>
+        </div>
+      </div>
     </div>
 
     <script>
-        // グローバル変数
-        let surveyData = [];
-        let charts = {};
+      // グローバル変数
+      let gasUrl = "";
+      let surveyStats = null;
+      let charts = {};
 
-        // 質問とカテゴリの定義
-        const questions = [
-            { id: 'q1_hie_muku', text: '冷え・むくみ', category: '美容・見た目' },
-            { id: 'q2_benpi', text: '便秘・お腹の張り', category: '美容・見た目' },
-            { id: 'q3_nemuke', text: '眠気・体の重さ', category: '身体の不調' },
-            { id: 'q4_katakori', text: '肩こり・頭痛', category: '身体の不調' },
-            { id: 'q5_teashi_hie', text: '手足の冷え', category: '身体の不調' },
-            { id: 'q6_fuan_ochikomi', text: '不安・落ち込み', category: 'メンタル' },
-            { id: 'q7_iraira', text: 'イライラ', category: 'メンタル' },
-            { id: 'q8_pms', text: 'PMS症状', category: '女性特有' },
-            { id: 'q9_seiri_shuki', text: '生理周期の影響', category: '女性特有' },
-            { id: 'q10_performance', text: 'パフォーマンス低下', category: '仕事・集中力' }
-        ];
+      // 初期化
+      document.addEventListener("DOMContentLoaded", function () {
+        // 保存されたGAS URLを読み込み
+        const savedUrl = localStorage.getItem("gasUrl");
+        if (savedUrl) {
+          document.getElementById("gasUrl").value = savedUrl;
+          gasUrl = savedUrl;
+          // 自動で初回データ読み込み
+          loadData();
+        }
+      });
 
-        // サンプルデータを読み込み
-        function loadSampleData() {
-            const sampleData = `タイムスタンプ,体が冷えやすく夕方になると足がパンパンにむくんで靴がきつい,便秘がちでお腹が張ってポッコリしているのが気になる,十分寝たつもりでも日中ずっと眠くて体が重い,常に肩や首が凝っていて頭痛に悩まされることもある,手足がいつも冷たく冬はもちろん夏場のクーラーも辛い,理由もないのに急に不安になったり気分が落ち込んだりする,些細なことでイライラしてしまい家族やパートナーにきつく当たって後で自己嫌悪に陥る,生理前になるとイライラ気分の落ち込み胸の張り肌荒れ眠気などがひどくて辛い,生理周期によって仕事のパフォーマンスや人間関係に影響が出てしまう,会議中や作業中に頭がぼーっとしてしまい話が頭に入ってこない
-2024-01-15 10:30:00,当てはまる,どちらともいえない,当てはまる,当てはまる,どちらともいえない,あてはまらない,当てはまる,当てはまる,どちらともいえない,当てはまる
-2024-01-16 14:20:00,どちらともいえない,当てはまる,あてはまらない,当てはまる,当てはまる,当てはまる,どちらともいえない,あてはまらない,当てはまる,どちらともいえない
-2024-01-17 09:15:00,当てはまる,当てはまる,当てはまる,あてはまらない,当てはまる,どちらともいえない,当てはまる,当てはまる,当てはまる,当てはまる
-2024-01-18 16:45:00,あてはまらない,どちらともいえない,どちらともいえない,どちらともいえない,あてはまらない,当てはまる,あてはまらない,どちらともいえない,あてはまらない,どちらともいえない
-2024-01-19 11:30:00,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる,当てはまる`;
-            
-            document.getElementById('dataInput').value = sampleData;
-            analyzeData();
+      // GAS URLを保存
+      function saveGasUrl() {
+        const urlInput = document.getElementById("gasUrl");
+        gasUrl = urlInput.value.trim();
+
+        if (!gasUrl) {
+          showMessage("URLを入力してください", "error");
+          return;
         }
 
-        // データをクリア
-        function clearData() {
-            document.getElementById('dataInput').value = '';
-            surveyData = [];
-            updateStats();
-            clearCharts();
+        localStorage.setItem("gasUrl", gasUrl);
+        showMessage("GAS URLを保存しました", "success");
+      }
+
+      // データを読み込み
+      async function loadData() {
+        if (!gasUrl) {
+          showMessage("まずGAS URLを設定してください", "error");
+          return;
         }
 
-        // データを分析
-        function analyzeData() {
-            const inputData = document.getElementById('dataInput').value.trim();
-            if (!inputData) {
-                alert('データを入力してください。');
-                return;
-            }
+        showLoading("データを読み込み中...");
 
-            // CSVデータをパース
-            const lines = inputData.split('\n');
-            const headers = lines[0].split(',');
-            
-            surveyData = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim()) {
-                    const values = lines[i].split(',');
-                    const record = {
-                        timestamp: values[0],
-                        responses: values.slice(1, 11) // 質問1-10の回答
-                    };
-                    surveyData.push(record);
-                }
-            }
+        try {
+          const response = await fetch(`${gasUrl}?action=getStats`);
 
-            updateStats();
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data.result === "success") {
+            surveyStats = data.stats;
+            updateDashboard();
             createCharts();
-            updateCategorySummary();
+            showMessage("データを正常に読み込みました", "success");
+          } else {
+            throw new Error(data.message || "データの読み込みに失敗しました");
+          }
+        } catch (error) {
+          console.error("Error loading data:", error);
+          showMessage(`データの読み込みエラー: ${error.message}`, "error");
+        }
+      }
+
+      // 統計を更新
+      function refreshStats() {
+        loadData();
+      }
+
+      // CSVエクスポート
+      async function exportData() {
+        if (!gasUrl) {
+          showMessage("まずGAS URLを設定してください", "error");
+          return;
         }
 
-        // 統計を更新
-        function updateStats() {
-            const totalResponses = surveyData.length;
-            document.getElementById('totalResponses').textContent = totalResponses;
+        showLoading("CSVを準備中...");
 
-            if (totalResponses === 0) {
-                document.getElementById('avgConcernLevel').textContent = '0%';
-                document.getElementById('highConcernCount').textContent = '0';
-                document.getElementById('mostCommonIssue').textContent = '-';
-                return;
-            }
+        try {
+          const response = await fetch(`${gasUrl}?action=exportCSV`);
 
-            // 平均悩み度を計算
-            let totalConcernScore = 0;
-            let highConcernCount = 0;
-            const questionConcerns = new Array(10).fill(0);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
-            surveyData.forEach(record => {
-                let userScore = 0;
-                record.responses.forEach((response, index) => {
-                    const score = response === '当てはまる' ? 2 : response === 'どちらともいえない' ? 1 : 0;
-                    userScore += score;
-                    questionConcerns[index] += score;
-                });
-                totalConcernScore += userScore;
-                if (userScore >= 15) highConcernCount++; // 20点中15点以上を高悩み度とする
-            });
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `survey_data_${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
 
-            const avgConcernPercent = Math.round((totalConcernScore / (totalResponses * 20)) * 100);
-            document.getElementById('avgConcernLevel').textContent = avgConcernPercent + '%';
-            document.getElementById('highConcernCount').textContent = highConcernCount;
+          showMessage("CSVファイルをダウンロードしました", "success");
+        } catch (error) {
+          console.error("Error exporting CSV:", error);
+          showMessage(`CSVエクスポートエラー: ${error.message}`, "error");
+        }
+      }
 
-            // 最も多い悩みを特定
-            const maxIndex = questionConcerns.indexOf(Math.max(...questionConcerns));
-            document.getElementById('mostCommonIssue').textContent = questions[maxIndex].text;
+      // アンケート画面を開く
+      function openSurvey() {
+        window.open("qustions.html", "_blank");
+      }
+
+      // ダッシュボードを更新
+      function updateDashboard() {
+        if (!surveyStats) return;
+
+        document.getElementById("totalCount").textContent =
+          surveyStats.totalResponses;
+        document.getElementById("avgScore").textContent =
+          surveyStats.avgConcernLevel + "%";
+        document.getElementById("highConcern").textContent =
+          surveyStats.highConcernCount;
+
+        // 今日の回答数を計算
+        const today = new Date().toISOString().split("T")[0];
+        const todayCount = surveyStats.dailyStats[today] || 0;
+        document.getElementById("todayCount").textContent = todayCount;
+      }
+
+      // チャートを作成
+      function createCharts() {
+        if (!surveyStats) return;
+
+        createCategoryChart();
+        createTimeChart();
+        createTopQuestionsChart();
+        createResponseChart();
+      }
+
+      // カテゴリ別チャート
+      function createCategoryChart() {
+        const ctx = document.getElementById("categoryChart").getContext("2d");
+
+        if (charts.categoryChart) {
+          charts.categoryChart.destroy();
         }
 
-        // カテゴリ別サマリーを更新
-        function updateCategorySummary() {
-            const categories = [...new Set(questions.map(q => q.category))];
-            const categoryData = {};
+        const categories = Object.keys(surveyStats.categoryStats);
+        const percentages = categories.map(
+          (cat) => surveyStats.categoryStats[cat].percentage
+        );
 
-            categories.forEach(cat => {
-                categoryData[cat] = { total: 0, count: 0 };
-            });
-
-            surveyData.forEach(record => {
-                questions.forEach((question, index) => {
-                    const score = record.responses[index] === '当てはまる' ? 2 : 
-                                 record.responses[index] === 'どちらともいえない' ? 1 : 0;
-                    categoryData[question.category].total += score;
-                    categoryData[question.category].count += 1;
-                });
-            });
-
-            const summaryHTML = categories.map(cat => {
-                const maxPossible = categoryData[cat].count * 2; // 各質問最大2点
-                const percentage = maxPossible > 0 ? Math.round((categoryData[cat].total / maxPossible) * 100) : 0;
-                
-                return `
-                    <div class="category-card">
-                        <h4>${cat}</h4>
-                        <p>悩み度: ${percentage}%</p>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('categorySummary').innerHTML = summaryHTML;
-        }
-
-        // チャートを作成
-        function createCharts() {
-            createQuestionChart();
-            createCategoryChart();
-            createResponseChart();
-            createTimeChart();
-        }
-
-        // 質問別チャート
-        function createQuestionChart() {
-            const ctx = document.getElementById('questionChart').getContext('2d');
-            
-            if (charts.questionChart) {
-                charts.questionChart.destroy();
-            }
-
-            const labels = questions.map(q => q.text);
-            const concernData = new Array(10).fill(0);
-            const neutralData = new Array(10).fill(0);
-            const noConcernData = new Array(10).fill(0);
-
-            surveyData.forEach(record => {
-                record.responses.forEach((response, index) => {
-                    if (response === '当てはまる') concernData[index]++;
-                    else if (response === 'どちらともいえない') neutralData[index]++;
-                    else noConcernData[index]++;
-                });
-            });
-
-            charts.questionChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: '当てはまる',
-                            data: concernData,
-                            backgroundColor: '#dc3545',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'どちらともいえない',
-                            data: neutralData,
-                            backgroundColor: '#ffc107',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'あてはまらない',
-                            data: noConcernData,
-                            backgroundColor: '#28a745',
-                            borderWidth: 1
-                        }
-                    ]
+        charts.categoryChart = new Chart(ctx, {
+          type: "radar",
+          data: {
+            labels: categories,
+            datasets: [
+              {
+                label: "悩み度 (%)",
+                data: percentages,
+                backgroundColor: "rgba(10, 36, 114, 0.2)",
+                borderColor: "#0a2472",
+                borderWidth: 2,
+                pointBackgroundColor: "#d4af37",
+                pointBorderColor: "#0a2472",
+                pointRadius: 5,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              r: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  stepSize: 20,
                 },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    }
-                }
-            });
-        }
-
-        // カテゴリ別チャート
-        function createCategoryChart() {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            
-            if (charts.categoryChart) {
-                charts.categoryChart.destroy();
-            }
-
-            const categories = [...new Set(questions.map(q => q.category))];
-            const categoryScores = {};
-
-            categories.forEach(cat => {
-                categoryScores[cat] = 0;
-            });
-
-            surveyData.forEach(record => {
-                questions.forEach((question, index) => {
-                    const score = record.responses[index] === '当てはまる' ? 2 : 
-                                 record.responses[index] === 'どちらともいえない' ? 1 : 0;
-                    categoryScores[question.category] += score;
-                });
-            });
-
-            const maxPossible = surveyData.length * 2; // 各カテゴリの最大可能スコア（質問数による）
-            const categoryPercentages = categories.map(cat => {
-                const questionsInCategory = questions.filter(q => q.category === cat).length;
-                const maxForCategory = surveyData.length * questionsInCategory * 2;
-                return maxForCategory > 0 ? Math.round((categoryScores[cat] / maxForCategory) * 100) : 0;
-            });
-
-            charts.categoryChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        label: '悩み度 (%)',
-                        data: categoryPercentages,
-                        backgroundColor: 'rgba(10, 36, 114, 0.2)',
-                        borderColor: '#0a2472',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#d4af37',
-                        pointBorderColor: '#0a2472',
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                stepSize: 20
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // 回答傾向チャート（円グラフ）
-        function createResponseChart() {
-            const ctx = document.getElementById('responseChart').getContext('2d');
-            
-            if (charts.responseChart) {
-                charts.responseChart.destroy();
-            }
-
-            let concernCount = 0;
-            let neutralCount = 0;
-            let noConcernCount = 0;
-
-            surveyData.forEach(record => {
-                record.responses.forEach(response => {
-                    if (response === '当てはまる') concernCount++;
-                    else if (response === 'どちらともいえない') neutralCount++;
-                    else noConcernCount++;
-                });
-            });
-
-            charts.responseChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['当てはまる', 'どちらともいえない', 'あてはまらない'],
-                    datasets: [{
-                        data: [concernCount, neutralCount, noConcernCount],
-                        backgroundColor: ['#dc3545', '#ffc107', '#28a745'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        // 時系列チャート
-        function createTimeChart() {
-            const ctx = document.getElementById('timeChart').getContext('2d');
-            
-            if (charts.timeChart) {
-                charts.timeChart.destroy();
-            }
-
-            // 日付別に回答数を集計
-            const dateMap = {};
-            surveyData.forEach(record => {
-                const date = record.timestamp.split(' ')[0]; // 日付部分のみ取得
-                if (!dateMap[date]) {
-                    dateMap[date] = 0;
-                }
-                dateMap[date]++;
-            });
-
-            const dates = Object.keys(dateMap).sort();
-            const counts = dates.map(date => dateMap[date]);
-
-            charts.timeChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: '回答数',
-                        data: counts,
-                        borderColor: '#0a2472',
-                        backgroundColor: 'rgba(10, 36, 114, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#d4af37',
-                        pointBorderColor: '#0a2472',
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: '日付'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            },
-                            title: {
-                                display: true,
-                                text: '回答数'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        // チャートをクリア
-        function clearCharts() {
-            Object.values(charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
-            charts = {};
-            document.getElementById('categorySummary').innerHTML = '<p>データを入力して分析ボタンを押してください。</p>';
-        }
-
-        // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初期状態の表示
-            updateStats();
+              },
+            },
+          },
         });
+      }
+
+      // 時系列チャート
+      function createTimeChart() {
+        const ctx = document.getElementById("timeChart").getContext("2d");
+
+        if (charts.timeChart) {
+          charts.timeChart.destroy();
+        }
+
+        const dates = Object.keys(surveyStats.dailyStats).sort();
+        const counts = dates.map((date) => surveyStats.dailyStats[date]);
+
+        charts.timeChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: dates,
+            datasets: [
+              {
+                label: "回答数",
+                data: counts,
+                borderColor: "#0a2472",
+                backgroundColor: "rgba(10, 36, 114, 0.1)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: "#d4af37",
+                pointBorderColor: "#0a2472",
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "日付",
+                },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                },
+                title: {
+                  display: true,
+                  text: "回答数",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+          },
+        });
+      }
+
+      // 上位質問チャート
+      function createTopQuestionsChart() {
+        const ctx = document
+          .getElementById("topQuestionsChart")
+          .getContext("2d");
+
+        if (charts.topQuestionsChart) {
+          charts.topQuestionsChart.destroy();
+        }
+
+        // 質問を悩み度でソートして上位5件を取得
+        const sortedQuestions = surveyStats.questionConcerns
+          .map((item, index) => ({ ...item, index }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 5);
+
+        const labels = sortedQuestions.map((item) => item.question);
+        const percentages = sortedQuestions.map((item) => item.percentage);
+
+        charts.topQuestionsChart = new Chart(ctx, {
+          type: "bar", // horizontalBar → bar に変更
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "悩み度 (%)",
+                data: percentages,
+                backgroundColor: [
+                  "#dc3545",
+                  "#fd7e14",
+                  "#ffc107",
+                  "#28a745",
+                  "#17a2b8",
+                ],
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            indexAxis: "y", // 横向きバーチャートにするオプション
+            scales: {
+              x: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: "悩み度 (%)",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+          },
+        });
+      }
+
+      // 回答傾向チャート
+      function createResponseChart() {
+        const ctx = document.getElementById("responseChart").getContext("2d");
+
+        if (charts.responseChart) {
+          charts.responseChart.destroy();
+        }
+
+        // 全回答から傾向を計算
+        let totalConcern = 0;
+        let totalNeutral = 0;
+        let totalNoConcern = 0;
+
+        surveyStats.questionConcerns.forEach((question) => {
+          const totalResponses = surveyStats.totalResponses;
+          const concernCount =
+            Math.round((question.percentage / 100) * totalResponses * 2) / 2; // 当てはまる
+          const remainingResponses = totalResponses - concernCount;
+
+          totalConcern += concernCount;
+          totalNeutral += remainingResponses * 0.5; // 推定値
+          totalNoConcern += remainingResponses * 0.5; // 推定値
+        });
+
+        charts.responseChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["当てはまる", "どちらともいえない", "あてはまらない"],
+            datasets: [
+              {
+                data: [totalConcern, totalNeutral, totalNoConcern],
+                backgroundColor: ["#dc3545", "#ffc107", "#28a745"],
+                borderWidth: 2,
+                borderColor: "#ffffff",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+
+      // メッセージを表示
+      function showMessage(message, type = "info") {
+        const messageArea = document.getElementById("messageArea");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = type;
+        messageDiv.textContent = message;
+
+        messageArea.innerHTML = "";
+        messageArea.appendChild(messageDiv);
+
+        // 3秒後に自動で消去（エラーメッセージ以外）
+        if (type !== "error") {
+          setTimeout(() => {
+            messageDiv.remove();
+          }, 3000);
+        }
+      }
+
+      // ローディング表示
+      function showLoading(message) {
+        const messageArea = document.getElementById("messageArea");
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "loading";
+        loadingDiv.textContent = message;
+
+        messageArea.innerHTML = "";
+        messageArea.appendChild(loadingDiv);
+      }
+
+      // 定期的な自動更新（5分ごと）
+      setInterval(() => {
+        if (gasUrl && surveyStats) {
+          console.log("自動更新中...");
+          refreshStats();
+        }
+      }, 5 * 60 * 1000); // 5分 = 5 * 60 * 1000ms
+
+      // ページ離脱前の確認（未保存の設定がある場合）
+      window.addEventListener("beforeunload", function (e) {
+        const currentUrl = document.getElementById("gasUrl").value;
+        const savedUrl = localStorage.getItem("gasUrl");
+
+        if (currentUrl !== savedUrl && currentUrl.trim() !== "") {
+          e.preventDefault();
+          e.returnValue =
+            "GAS URLの変更が保存されていません。ページを離れますか？";
+          return e.returnValue;
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
