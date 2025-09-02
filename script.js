@@ -1,6 +1,6 @@
 // ここに実際のGAS URLを貼り付け
 const GAS_URL =
-  "https://script.google.com/macros/s/AKfycbzhycw1lm_Aw6fW5h0ye_mIn8Vocbu0EiFT4rqkMImJPn3TQ0WkPZuExXdEAN4a0XjX/exec";
+  https://script.google.com/macros/s/AKfycbz5pASuI5Pg8-Rnp74NF4_VbZ0AGG6gyOec2Insy4hBGEyq81PJMYr53_qC4pN1rol54w/exec;
 
 const form = document.getElementById("survey-form");
 const messageDiv = document.getElementById("message");
